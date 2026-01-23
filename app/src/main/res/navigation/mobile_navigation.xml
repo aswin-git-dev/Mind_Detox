@@ -3,29 +3,28 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/mobile_navigation"
-    app:startDestination="@+id/nav_transform">
+    app:startDestination="@+id/nav_home">
 
     <fragment
-        android:id="@+id/nav_transform"
-        android:name="com.example.mind_detox.ui.transform.TransformFragment"
-        android:label="@string/menu_transform"
-        tools:layout="@layout/fragment_transform" />
+        android:id="@+id/nav_home"
+        android:name="com.example.mind_detox.ui.home.HomeFragment"
+        android:label="Home"
+        tools:layout="@layout/fragment_home" />
 
     <fragment
-        android:id="@+id/nav_reflow"
-        android:name="com.example.mind_detox.ui.reflow.ReflowFragment"
-        android:label="@string/menu_reflow"
-        tools:layout="@layout/fragment_reflow" />
+        android:id="@+id/nav_apps"
+        android:name="com.example.mind_detox.ui.apps.AppSelectionFragment"
+        android:label="Select Apps"
+        tools:layout="@layout/fragment_app_selection" />
 
     <fragment
-        android:id="@+id/nav_slideshow"
-        android:name="com.example.mind_detox.ui.slideshow.SlideshowFragment"
-        android:label="@string/menu_slideshow"
-        tools:layout="@layout/fragment_slideshow" />
+        android:id="@+id/nav_stats"
+        android:name="com.example.mind_detox.ui.stats.StatsFragment"
+        android:label="Statistics"
+        tools:layout="@layout/fragment_stats" />
 
     <fragment
         android:id="@+id/nav_settings"
         android:name="com.example.mind_detox.ui.settings.SettingsFragment"
-        android:label="@string/menu_settings"
-        tools:layout="@layout/fragment_settings" />
+        android:label="Settings" />
 </navigation>
