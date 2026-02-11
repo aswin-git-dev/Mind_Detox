@@ -3,22 +3,33 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#1A1A1A"
+    android:background="@color/white"
     android:padding="32dp">
+
+    <ImageView
+        android:id="@+id/iv_logo"
+        android:layout_width="120dp"
+        android:layout_height="120dp"
+        android:src="@drawable/app_logo"
+        app:layout_constraintBottom_toTopOf="@+id/tv_logo"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_chainStyle="packed" />
 
     <TextView
         android:id="@+id/tv_logo"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
         android:text="Mind Detox"
-        android:textColor="@color/white"
+        android:textColor="@color/black"
         android:textSize="32sp"
         android:textStyle="bold"
         app:layout_constraintBottom_toTopOf="@+id/tv_subtitle"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_chainStyle="packed" />
+        app:layout_constraintTop_toBottomOf="@+id/iv_logo" />
 
     <TextView
         android:id="@+id/tv_subtitle"
@@ -26,7 +37,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:text="Reclaim your focus"
-        android:textColor="#999999"
+        android:textColor="#666666"
         android:textSize="16sp"
         app:layout_constraintBottom_toTopOf="@+id/til_pin"
         app:layout_constraintEnd_toEndOf="parent"
@@ -40,21 +51,16 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="48dp"
         android:hint="Enter PIN"
-        android:textColorHint="#666666"
-        app:boxStrokeColor="@color/white"
-        app:hintTextColor="@color/white"
         app:layout_constraintBottom_toTopOf="@+id/btn_login"
         app:layout_constraintTop_toBottomOf="@+id/tv_subtitle"
-        app:passwordToggleEnabled="true"
-        app:passwordToggleTint="@color/white">
+        app:passwordToggleEnabled="true">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/et_pin"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:inputType="numberPassword"
-            android:maxLength="4"
-            android:textColor="@color/white" />
+            android:maxLength="4" />
     </com.google.android.material.textfield.TextInputLayout>
 
     <Button
@@ -62,10 +68,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="24dp"
-        android:backgroundTint="@color/white"
         android:padding="16dp"
         android:text="Unlock"
-        android:textColor="#1A1A1A"
         app:cornerRadius="8dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/til_pin" />

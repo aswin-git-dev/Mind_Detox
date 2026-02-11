@@ -84,9 +84,33 @@ class AppSelectionFragment : Fragment() {
     }
 }
 
-data class AppItem(
+class AppItem(
     val name: String,
     val packageName: String,
     val icon: android.graphics.drawable.Drawable,
     val isBlocked: Boolean
-)
+) {
+    fun copy(isBlocked: Boolean): AppItem {
+        return AppItem(name, packageName, icon, isBlocked)
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as AppItem
+
+        if (name != other.name) return false
+        if (packageName != other.packageName) return false
+        if (isBlocked != other.isBlocked) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = name.hashCode()
+        result = 31 * result + packageName.hashCode()
+        result = 31 * result + isBlocked.hashCode()
+        return result
+    }
+}

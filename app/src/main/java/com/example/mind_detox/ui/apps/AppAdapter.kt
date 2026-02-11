@@ -47,7 +47,7 @@ class AppAdapter(private val onToggle: (String, String, Boolean) -> Unit) :
         }
 
         override fun areContentsTheSame(oldItem: AppItem, newItem: AppItem): Boolean {
-            return oldItem == newItem
+            return oldItem.name == newItem.name && oldItem.isBlocked == newItem.isBlocked
         }
     }
 }
