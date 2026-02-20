@@ -30,22 +30,20 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
     private val viewModel: MainViewModel by viewModels()
+    private var isQuoteShown = false
 
     private val locationPermissionRequest = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
         when {
-            permissions.getOrDefault(Manifest.permission.ACCESS_FINE_LOCATION, false) -> {
-                // Precise location access granted.
-                startLocationService()
-            }
+            permissions.getOrDefault(Manifest.permission.ACCESS_FINE_LOCATION, false) ||
             permissions.getOrDefault(Manifest.permission.ACCESS_COARSE_LOCATION, false) -> {
-                // Only approximate location access granted.
                 startLocationService()
             }
             else -> {
-                // No location access granted.
                 Toast.makeText(this, "Location permission denied", Toast.LENGTH_SHORT).show()
+                // If denied, we still show the quote but it won't have the location
+                viewModel.prepareQuote(null)
             }
         }
     }
@@ -65,15 +63,12 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Find the NavHostFragment correctly
         val navHostFragment = supportFragmentManager
             .findFragmentById(R.id.nav_host_fragment_content_main) as NavHostFragment
         val navController = navHostFragment.navController
 
-        // Set up the toolbar
         setSupportActionBar(binding.appBarMain.toolbar)
 
-        // Setting up Bottom Navigation
         binding.appBarMain.contentMain.bottomNavView?.let { bottomNav ->
             val appBarConfiguration = AppBarConfiguration(
                 setOf(R.id.nav_home, R.id.nav_apps, R.id.nav_stats)
@@ -82,29 +77,24 @@ class MainActivity : AppCompatActivity() {
             bottomNav.setupWithNavController(navController)
         }
 
-        // Show Quote of the Day popup
-        showQuotePopup()
+        // Observe the message from ViewModel
+        viewModel.quoteAndLocationMessage.observe(this) { message ->
+            if (!isQuoteShown) {
+                showQuotePopup(message)
+                isQuoteShown = true
+            }
+        }
 
-        // Check and request location permissions
         checkLocationPermissions()
     }
 
     private fun checkLocationPermissions() {
-        if (ContextCompat.checkSelfPermission(
-                this,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) == PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission(
-                this,
-                Manifest.permission.ACCESS_COARSE_LOCATION
-            ) == PackageManager.PERMISSION_GRANTED
-        ) {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
+            ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             startLocationService()
         } else {
             locationPermissionRequest.launch(
-                arrayOf(
-                    Manifest.permission.ACCESS_FINE_LOCATION,
-                    Manifest.permission.ACCESS_COARSE_LOCATION
-                )
+                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
             )
         }
     }
@@ -112,7 +102,7 @@ class MainActivity : AppCompatActivity() {
     private fun startLocationService() {
         val intent = Intent(this, LocationService::class.java)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            startForegroundService(intent) // Better to start as foreground service if needed, but for now simple start
+            startForegroundService(intent)
         } else {
             startService(intent)
         }
@@ -137,27 +127,18 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun showQuotePopup() {
-        val quotes = listOf(
-            "The secret of getting ahead is getting started.",
-            "It always seems impossible until it's done.",
-            "Quality is not an act, it is a habit.",
-            "Believe you can and you're halfway there.",
-            "Your time is limited, so don't waste it living someone else's life."
-        )
-        val randomQuote = quotes.random()
-
+    private fun showQuotePopup(message: String) {
         MaterialAlertDialogBuilder(this)
             .setTitle("Quote to Start Your Day")
-            .setMessage(randomQuote)
+            .setMessage(message)
             .setPositiveButton("Let's Go!") { dialog, _ ->
                 dialog.dismiss()
             }
+            .setCancelable(true) // Changed to true to allow closing by clicking outside
             .show()
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        // Inflate the menu; this adds items to the action bar if it is present.
         menuInflater.inflate(R.menu.overflow, menu)
         return true
     }
@@ -166,10 +147,7 @@ class MainActivity : AppCompatActivity() {
         val navHostFragment = supportFragmentManager
             .findFragmentById(R.id.nav_host_fragment_content_main) as NavHostFragment
         val navController = navHostFragment.navController
-
-        // Handle navigation when an item is selected
-        return NavigationUI.onNavDestinationSelected(item, navController)
-                || super.onOptionsItemSelected(item)
+        return NavigationUI.onNavDestinationSelected(item, navController) || super.onOptionsItemSelected(item)
     }
 
     override fun onSupportNavigateUp(): Boolean {
