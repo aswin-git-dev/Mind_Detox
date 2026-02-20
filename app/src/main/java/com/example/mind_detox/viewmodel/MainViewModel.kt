@@ -13,11 +13,18 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     val allBlockedApps: LiveData<List<BlockedApp>>
     val totalFocusTime: LiveData<Int?>
 
+    private val _currentLocation = MutableLiveData<String>("Waiting for update...")
+    val currentLocation: LiveData<String> = _currentLocation
+
     init {
         val database = AppDatabase.getDatabase(application)
         repository = AppRepository(database.blockedAppDao(), database.focusSessionDao())
         allBlockedApps = repository.allBlockedApps.asLiveData()
         totalFocusTime = repository.totalFocusTime.asLiveData()
+    }
+
+    fun updateLocation(latitude: Double, longitude: Double) {
+        _currentLocation.postValue(String.format("Location: %.4f, %.4f", latitude, longitude))
     }
 
     fun toggleAppBlock(packageName: String, appName: String, isBlocked: Boolean) {

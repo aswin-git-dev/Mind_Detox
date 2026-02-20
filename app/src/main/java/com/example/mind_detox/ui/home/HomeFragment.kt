@@ -11,7 +11,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
+import androidx.fragment.app.activityViewModels
 import com.example.mind_detox.databinding.FragmentHomeBinding
 import com.example.mind_detox.service.FocusService
 import com.example.mind_detox.viewmodel.MainViewModel
@@ -20,7 +20,7 @@ class HomeFragment : Fragment() {
 
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
-    private val viewModel: MainViewModel by viewModels()
+    private val viewModel: MainViewModel by activityViewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -48,6 +48,10 @@ class HomeFragment : Fragment() {
 
         viewModel.allBlockedApps.observe(viewLifecycleOwner) { apps ->
             binding.tvAppsBlocked.text = apps.size.toString()
+        }
+
+        viewModel.currentLocation.observe(viewLifecycleOwner) { locationStr ->
+            binding.tvLocation.text = locationStr
         }
     }
 
