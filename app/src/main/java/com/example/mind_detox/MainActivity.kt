@@ -6,8 +6,11 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
+import android.telephony.SmsManager
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
@@ -32,20 +35,25 @@ class MainActivity : AppCompatActivity() {
     private val viewModel: MainViewModel by viewModels()
     private var isQuoteShown = false
 
-    private val locationPermissionRequest = registerForActivityResult(
+    private val requestPermissionsLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
-        when {
-            permissions.getOrDefault(Manifest.permission.ACCESS_FINE_LOCATION, false) ||
-            permissions.getOrDefault(Manifest.permission.ACCESS_COARSE_LOCATION, false) -> {
-                startLocationService()
-            }
-            else -> {
-                Toast.makeText(this, "Location permission denied", Toast.LENGTH_SHORT).show()
-                // If denied, we still show the quote but it won't have the location
-                viewModel.prepareQuote(null)
-            }
+        val locationGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] ?: false ||
+                permissions[Manifest.permission.ACCESS_COARSE_LOCATION] ?: false
+        val smsGranted = permissions[Manifest.permission.SEND_SMS] ?: false
+
+        if (locationGranted) {
+            startLocationService()
+        } else {
+            Toast.makeText(this, "Location permission denied", Toast.LENGTH_SHORT).show()
+            viewModel.prepareQuote(null)
         }
+
+        if (smsGranted) {
+            Toast.makeText(this, "SMS permission granted", Toast.LENGTH_SHORT).show()
+        }
+        
+        checkOverlayPermission()
     }
 
     private val locationUpdateReceiver = object : BroadcastReceiver() {
@@ -77,7 +85,6 @@ class MainActivity : AppCompatActivity() {
             bottomNav.setupWithNavController(navController)
         }
 
-        // Observe the message from ViewModel
         viewModel.quoteAndLocationMessage.observe(this) { message ->
             if (!isQuoteShown) {
                 showQuotePopup(message)
@@ -85,17 +92,45 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        checkLocationPermissions()
+        checkAndRequestPermissions()
     }
 
-    private fun checkLocationPermissions() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
-            ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-            startLocationService()
+    private fun checkAndRequestPermissions() {
+        val permissionsToRequest = mutableListOf<String>()
+
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            permissionsToRequest.add(Manifest.permission.ACCESS_FINE_LOCATION)
         } else {
-            locationPermissionRequest.launch(
-                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
-            )
+            startLocationService()
+        }
+
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.SEND_SMS) != PackageManager.PERMISSION_GRANTED) {
+            permissionsToRequest.add(Manifest.permission.SEND_SMS)
+        }
+
+        if (permissionsToRequest.isNotEmpty()) {
+            requestPermissionsLauncher.launch(permissionsToRequest.toTypedArray())
+        } else {
+            checkOverlayPermission()
+        }
+    }
+
+    private fun checkOverlayPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (!Settings.canDrawOverlays(this)) {
+                MaterialAlertDialogBuilder(this)
+                    .setTitle("Permission Required")
+                    .setMessage("Mind Detox needs 'Display over other apps' permission to block distracting apps. Please enable it in the next screen.")
+                    .setPositiveButton("Settings") { _, _ ->
+                        val intent = Intent(
+                            Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                            Uri.parse("package:$packageName")
+                        )
+                        startActivity(intent)
+                    }
+                    .setNegativeButton("Later", null)
+                    .show()
+            }
         }
     }
 
@@ -133,9 +168,28 @@ class MainActivity : AppCompatActivity() {
             .setMessage(message)
             .setPositiveButton("Let's Go!") { dialog, _ ->
                 dialog.dismiss()
+                sendSmsAlert("8825558350", "User has started their focus activity.")
             }
-            .setCancelable(true) // Changed to true to allow closing by clicking outside
+            .setCancelable(true)
             .show()
+    }
+
+    private fun sendSmsAlert(phoneNumber: String, message: String) {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.SEND_SMS) == PackageManager.PERMISSION_GRANTED) {
+            try {
+                val smsManager: SmsManager = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    this.getSystemService(SmsManager::class.java)
+                } else {
+                    @Suppress("DEPRECATION")
+                    SmsManager.getDefault()
+                }
+                smsManager.sendTextMessage(phoneNumber, null, message, null, null)
+                Toast.makeText(this, "Alert SMS sent", Toast.LENGTH_SHORT).show()
+            } catch (e: Exception) {
+                Toast.makeText(this, "Failed to send SMS", Toast.LENGTH_SHORT).show()
+                Log.e("SMS", "Error sending SMS", e)
+            }
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {

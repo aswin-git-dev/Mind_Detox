@@ -130,7 +130,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:layout_marginBottom="24dp"
-            android:text="Location: Waiting for update..."
+            android:text="Current Logged in Location: Waiting for update..."
             android:textColor="#1A73E8"
             android:textSize="14sp"
             android:textStyle="italic"
