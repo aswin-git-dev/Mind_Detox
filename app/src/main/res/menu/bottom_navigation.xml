@@ -13,4 +13,8 @@
         android:id="@+id/nav_stats"
         android:icon="@android:drawable/ic_menu_sort_by_size"
         android:title="Stats" />
+    <item
+        android:id="@+id/nav_milestone"
+        android:icon="@android:drawable/ic_menu_agenda"
+        android:title="Milestone" />
 </menu>
