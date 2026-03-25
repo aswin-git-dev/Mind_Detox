@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.IBinder
+import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.example.mind_detox.MainActivity
 import com.example.mind_detox.R
@@ -13,7 +14,6 @@ import com.example.mind_detox.data.AppDatabase
 import com.example.mind_detox.data.repository.AppRepository
 import com.example.mind_detox.ui.BlockActivity
 import kotlinx.coroutines.*
-import java.util.*
 
 class FocusService : Service() {
 
@@ -32,7 +32,8 @@ class FocusService : Service() {
         if (!isRunning) {
             startForegroundService()
             isRunning = true
-            monitorApps()
+            startMonitoring()
+            Log.d("FocusService", "Monitoring Service Started")
         }
         return START_STICKY
     }
@@ -42,16 +43,20 @@ class FocusService : Service() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
                 channelId,
-                "Focus Mode Active",
+                "Mind Detox Background Monitor",
                 NotificationManager.IMPORTANCE_LOW
-            )
+            ).apply {
+                description = "Running in foreground to monitor distracting apps"
+            }
             getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
         }
 
         val notification = NotificationCompat.Builder(this, channelId)
-            .setContentTitle("Mind Detox Active")
-            .setContentText("Focus mode is on. Stay productive!")
-            .setSmallIcon(R.drawable.ic_launcher_foreground) // Use a proper icon later
+            .setContentTitle("Background Monitor Active")
+            .setContentText("Monitoring your focus. Distracting apps will be blocked.")
+            .setSmallIcon(R.drawable.app_logo)
+            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .setOngoing(true)
             .setContentIntent(
                 PendingIntent.getActivity(
                     this, 0, Intent(this, MainActivity::class.java),
@@ -60,19 +65,28 @@ class FocusService : Service() {
             )
             .build()
 
-        startForeground(1, notification)
+        startForeground(1001, notification)
     }
 
-    private fun monitorApps() {
+    private fun startMonitoring() {
         serviceScope.launch(Dispatchers.Default) {
             while (isRunning) {
                 val currentApp = getForegroundApp()
-                if (currentApp != null && repository.isAppBlocked(currentApp)) {
-                    showBlockScreen(currentApp)
+                Log.d("FocusService", "Foreground App: $currentApp")
+                
+                if (currentApp != null && !isSelf(currentApp)) {
+                    if (repository.isAppBlocked(currentApp)) {
+                        Log.d("FocusService", "Blocking Distraction: $currentApp")
+                        showBlockScreen(currentApp)
+                    }
                 }
-                delay(1000) // Check every second
+                delay(1000) 
             }
         }
+    }
+
+    private fun isSelf(packageName: String): Boolean {
+        return packageName == this.packageName || packageName == "com.android.settings"
     }
 
     private fun getForegroundApp(): String? {
@@ -83,12 +97,20 @@ class FocusService : Service() {
             time - 1000 * 10,
             time
         )
-        return stats?.maxByOrNull { it.lastTimeUsed }?.packageName
+        
+        return if (stats != null && stats.isNotEmpty()) {
+            val sortedStats = stats.sortedByDescending { it.lastTimeUsed }
+            sortedStats[0].packageName
+        } else {
+            null
+        }
     }
 
     private fun showBlockScreen(packageName: String) {
         val intent = Intent(this, BlockActivity::class.java).apply {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+            addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
             putExtra("PACKAGE_NAME", packageName)
         }
         startActivity(intent)
@@ -100,5 +122,6 @@ class FocusService : Service() {
         super.onDestroy()
         isRunning = false
         serviceJob.cancel()
+        Log.d("FocusService", "Monitoring Service Stopped")
     }
 }
