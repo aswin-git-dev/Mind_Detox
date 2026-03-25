@@ -3,12 +3,14 @@ package com.example.mind_detox.ui.home
 import android.app.AppOpsManager
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.MediaController
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -48,6 +50,31 @@ class HomeFragment : Fragment() {
 
         viewModel.allBlockedApps.observe(viewLifecycleOwner) { apps ->
             binding.tvAppsBlocked.text = apps.size.toString()
+        }
+
+        setupAdvertisement()
+    }
+
+    private fun setupAdvertisement() {
+        binding.cardAdvertisement.setOnClickListener {
+            // Assume the video is named 'ad_video.mp4' in res/raw/
+            val videoPath = "android.resource://" + requireContext().packageName + "/raw/ad_video"
+            val uri = Uri.parse(videoPath)
+            
+            binding.adVideoView.visibility = View.VISIBLE
+            binding.adVideoView.setVideoURI(uri)
+            
+            val mediaController = MediaController(requireContext())
+            mediaController.setAnchorView(binding.adVideoView)
+            binding.adVideoView.setMediaController(mediaController)
+            
+            binding.adVideoView.setOnErrorListener { _, _, _ ->
+                Toast.makeText(context, "Please add 'ad_video.mp4' to res/raw/ directory", Toast.LENGTH_LONG).show()
+                binding.adVideoView.visibility = View.GONE
+                true
+            }
+            
+            binding.adVideoView.start()
         }
     }
 
