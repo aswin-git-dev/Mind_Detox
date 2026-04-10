@@ -7,6 +7,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
+import android.text.util.Linkify
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -51,6 +52,9 @@ class HomeFragment : Fragment() {
         viewModel.allBlockedApps.observe(viewLifecycleOwner) { apps ->
             binding.tvAppsBlocked.text = apps.size.toString()
         }
+
+        // Apply Linkify to the support links text
+        Linkify.addLinks(binding.tvSupportLinks, Linkify.ALL)
 
         setupAdvertisement()
     }

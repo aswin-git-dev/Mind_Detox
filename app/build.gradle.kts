@@ -52,6 +52,9 @@ dependencies {
     
     // Play Services Location
     implementation(libs.play.services.location)
+
+    // AdMob
+    implementation(libs.play.services.ads)
     
     // Room
     implementation(libs.androidx.room.runtime)
