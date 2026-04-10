@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
-
     <item
         android:id="@+id/nav_home"
         android:icon="@android:drawable/ic_menu_today"
@@ -10,11 +9,11 @@
         android:icon="@android:drawable/ic_menu_manage"
         android:title="Apps" />
     <item
-        android:id="@+id/nav_stats"
-        android:icon="@android:drawable/ic_menu_sort_by_size"
-        android:title="Stats" />
-    <item
         android:id="@+id/nav_milestone"
         android:icon="@android:drawable/ic_menu_agenda"
         android:title="Milestone" />
+    <item
+        android:id="@+id/nav_tools"
+        android:icon="@android:drawable/ic_menu_preferences"
+        android:title="Tools" />
 </menu>
